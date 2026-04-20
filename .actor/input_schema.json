@@ -1,0 +1,42 @@
+{
+  "title": "Yelp Biz Page Scraper Input",
+  "type": "object",
+  "schemaVersion": 1,
+  "required": ["scrapeDoApiKey"],
+  "properties": {
+    "bizUrls": {
+      "title": "Yelp Business URLs",
+      "type": "array",
+      "description": "List of Yelp business page URLs (e.g. https://www.yelp.com/biz/warm-stone-spa-playa-del-rey)",
+      "editor": "stringList",
+      "prefill": ["https://www.yelp.com/biz/warm-stone-spa-playa-del-rey"]
+    },
+    "scrapeDoApiKey": {
+      "title": "Scrape.do API Key",
+      "type": "string",
+      "description": "Your Scrape.do API token",
+      "editor": "textfield",
+      "isSecret": true
+    },
+    "superProxy": {
+      "title": "Use super proxy",
+      "type": "boolean",
+      "description": "Enable scrape.do super proxy (residential). Slower but more reliable for blocked regions.",
+      "default": false
+    },
+    "geoCode": {
+      "title": "Geo code",
+      "type": "string",
+      "description": "Scrape.do geoCode (e.g. 'us'). Leave empty for default.",
+      "editor": "textfield",
+      "default": "us"
+    },
+    "delayBetweenRequestsMs": {
+      "title": "Delay between requests (ms)",
+      "type": "integer",
+      "description": "Pause between biz URL fetches to avoid hammering scrape.do.",
+      "default": 1500,
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "yelp-biz-scraper",
+  "version": "1.0.0",
+  "description": "Scrapes Yelp business pages via Scrape.do, extracts embedded Apollo GraphQL state into structured JSON.",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "apify": "^3.0.0"
+  }
+}
