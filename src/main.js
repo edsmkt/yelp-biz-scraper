@@ -29,15 +29,19 @@ function decodeHtmlEntities(s) {
 
 function extractApolloState(html) {
   // Yelp embeds the Apollo GraphQL normalized cache in an HTML comment,
-  // HTML-entity-encoded. Format: <!--{&quot;BusinessLocation:...&quot;:{...}}-->
-  const m = html.match(/<!--(\{&quot;BusinessLocation[\s\S]+?)-->/);
-  if (!m) return null;
-  try {
-    return JSON.parse(decodeHtmlEntities(m[1]));
-  } catch (e) {
-    log.warning(`Apollo JSON parse failed: ${e.message}`);
-    return null;
+  // HTML-entity-encoded. The comment typically starts with &quot;ROOT_QUERY&quot;
+  // and contains BusinessLocation somewhere in the middle.
+  const re = /<!--(\{&quot;[\s\S]+?\})-->/g;
+  let m;
+  while ((m = re.exec(html))) {
+    if (!m[1].includes('BusinessLocation')) continue;
+    try {
+      return JSON.parse(decodeHtmlEntities(m[1]));
+    } catch (e) {
+      log.warning(`Apollo JSON parse failed: ${e.message}`);
+    }
   }
+  return null;
 }
 
 function deref(ref, store) {
