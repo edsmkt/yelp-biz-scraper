@@ -19,12 +19,13 @@ if (!Array.isArray(bizUrls) || bizUrls.length === 0) {
 
 function decodeHtmlEntities(s) {
   return s
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#([0-9]+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
     .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-    .replace(/&#x27;/g, "'");
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&'); // &amp; last to avoid double-decoding
 }
 
 function extractApolloState(html) {
@@ -237,6 +238,9 @@ function parseBiz(apolloStore, url, rawHtml) {
 
 // -------- main loop ----------
 
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 3000;
+
 const results = [];
 for (let i = 0; i < bizUrls.length; i++) {
   const bizUrl = bizUrls[i];
@@ -251,24 +255,40 @@ for (let i = 0; i < bizUrls.length; i++) {
   if (geoCode) params.set('geoCode', geoCode);
   const apiUrl = `http://api.scrape.do/?${params.toString()}`;
 
-  let html;
-  try {
-    const res = await fetch(apiUrl);
-    if (!res.ok) {
-      log.warning(`HTTP ${res.status} for ${bizUrl}, skipping`);
-      await Actor.pushData({ url: bizUrl, error: `HTTP ${res.status}` });
-      continue;
+  let html = null;
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(apiUrl);
+      if (!res.ok) {
+        lastError = `HTTP ${res.status}`;
+        log.warning(`Attempt ${attempt}: HTTP ${res.status} for ${bizUrl}`);
+      } else {
+        const text = await res.text();
+        if (text.includes('BusinessLocation')) {
+          html = text;
+          break;
+        }
+        lastError = 'apollo_state_not_found';
+        log.warning(`Attempt ${attempt}: Apollo state missing for ${bizUrl} (page size: ${text.length})`);
+      }
+    } catch (e) {
+      lastError = e.message;
+      log.warning(`Attempt ${attempt}: Fetch failed for ${bizUrl}: ${e.message}`);
     }
-    html = await res.text();
-  } catch (e) {
-    log.warning(`Fetch failed for ${bizUrl}: ${e.message}`);
-    await Actor.pushData({ url: bizUrl, error: e.message });
+    if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+  }
+
+  if (!html) {
+    log.warning(`All ${MAX_RETRIES} attempts failed for ${bizUrl}: ${lastError}`);
+    await Actor.pushData({ url: bizUrl, error: lastError });
     continue;
   }
 
   const apollo = extractApolloState(html);
   if (!apollo) {
-    log.warning(`No Apollo state found for ${bizUrl}`);
+    log.warning(`Apollo JSON parse failed for ${bizUrl}`);
     await Actor.pushData({ url: bizUrl, error: 'apollo_state_not_found' });
     continue;
   }
