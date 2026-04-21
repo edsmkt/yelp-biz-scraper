@@ -264,14 +264,10 @@ for (let i = 0; i < bizUrls.length; i++) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    // First attempt: standard proxy, configured geoCode
-    // Retry: super proxy + Canada geoCode (fresh residential pool)
-    const useSuper = attempt > 1;
+    // All attempts use super proxy; retry switches geoCode to ca for a fresh pool
     const attemptParams = new URLSearchParams(params);
-    if (useSuper) {
-      attemptParams.set('super', 'true');
-      attemptParams.set('geoCode', 'ca');
-    }
+    attemptParams.set('super', 'true');
+    if (attempt > 1) attemptParams.set('geoCode', 'ca');
     const attemptUrl = `http://api.scrape.do/?${attemptParams.toString()}`;
 
     if (attempt > 1) log.info(`  Retry ${attempt}/${MAX_RETRIES} with super proxy...`);
