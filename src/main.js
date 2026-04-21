@@ -237,7 +237,7 @@ function parseBiz(apolloStore, url, rawHtml) {
 
 // -------- main loop ----------
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 2; // attempt 1: standard proxy; attempt 2: super proxy on miss
 const RETRY_DELAY_MS = 3000;
 
 const results = [];
