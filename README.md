@@ -46,7 +46,6 @@ apify push
 |-------|------|----------|-------------|
 | `bizUrls` | string[] | Yes | List of Yelp business page URLs |
 | `scrapeDoApiKey` | string | Yes | Your Scrape.do API token |
-| `superProxy` | boolean | No | Use Scrape.do super (residential) proxy. Default: `false` |
 | `geoCode` | string | No | Scrape.do geoCode (e.g. `"us"`). Default: `"us"` |
 | `delayBetweenRequestsMs` | integer | No | Pause between requests. Default: `1500` |
 
@@ -59,7 +58,6 @@ apify push
     "https://www.yelp.com/biz/rejuv-head-spa-calabasas-4"
   ],
   "scrapeDoApiKey": "your-scrape-do-api-key",
-  "superProxy": false,
   "geoCode": "us",
   "delayBetweenRequestsMs": 1500
 }
@@ -200,14 +198,16 @@ curl "https://api.apify.com/v2/acts/YOUR_ACTOR_ID/runs/last/dataset/items?token=
 
 Yelp embeds the full Apollo GraphQL normalized cache (~114KB of structured data) inside an HTML comment on every business page. The scraper:
 
-1. Fetches the biz page HTML via Scrape.do
-2. Locates the `<!--{...}-->` comment containing the Apollo cache
-3. Decodes HTML entities and parses the JSON
-4. Dereferences Apollo `__ref` pointers and flattens into a clean schema
-5. Extracts coordinates from the embedded Google static map URL (Yelp doesn't expose lat/lng directly — the `?center=LAT,LNG` param in the map image is the reliable source)
+1. Fetches the biz page via Scrape.do with `customHeaders=true`, forwarding real Chrome browser security headers (User-Agent, sec-ch-ua, sec-fetch-*, etc.) to bypass Yelp's DataDome bot detection
+2. Rotates through a pool of 10 browser fingerprints (Chrome 142–146, macOS/Windows/Linux, Edge) across requests to avoid fingerprint-based blocking
+3. Locates the `<!--{...}-->` HTML comment containing the Apollo GraphQL cache
+4. Decodes HTML entities and parses the JSON — if parse fails, retries with a fresh fingerprint and Canadian geoCode
+5. Dereferences Apollo `__ref` pointers and flattens into a clean output schema
+6. Extracts coordinates from the embedded Google static map URL — supports both storefront (`center=LAT,LNG`) and service-area businesses (`markers=...%7CLAT,LNG`)
 
 ## Notes
 
-- Individual reviews and Q&A answers are **not** included — those are lazy-loaded via separate GraphQL calls after page render
+- Individual reviews and Q&A answers are **not** included — those are lazy-loaded via separate GraphQL calls
 - Errored URLs are pushed to the dataset with an `error` field instead of being silently dropped
 - Default delay between requests is 1.5s; raise it if you hit Scrape.do rate limits
+- Tested at 20/20 success rate across lawyers, florists, movers, photographers, restaurants, spas, plumbers, auto repair, and more
