@@ -242,9 +242,15 @@ for (let i = 0; i < bizUrls.length; i++) {
         log.warning(`Attempt ${attempt}: HTTP ${res.status}`);
       } else {
         const text = await res.text();
-        if (text.includes('BusinessLocation')) { html = text; break; }
-        lastError = 'apollo_state_not_found';
-        log.warning(`Attempt ${attempt}: Apollo state missing (size: ${text.length})`);
+        if (text.includes('BusinessLocation')) {
+          // Verify parse succeeds before accepting
+          if (extractApolloState(text)) { html = text; break; }
+          lastError = 'apollo_state_not_found';
+          log.warning(`Attempt ${attempt}: Apollo parse failed (size: ${text.length})`);
+        } else {
+          lastError = 'apollo_state_not_found';
+          log.warning(`Attempt ${attempt}: Apollo state missing (size: ${text.length})`);
+        }
       }
     } catch (e) {
       lastError = e.message;
