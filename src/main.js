@@ -17,19 +17,37 @@ if (!Array.isArray(bizUrls) && !Array.isArray(bizIds)) {
 
 // -------- helpers ----------
 
-const BROWSER_HEADERS = {
-  'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-  'accept-language': 'en-US,en;q=0.9',
-  'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
-  'sec-ch-ua': '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
-  'sec-ch-ua-mobile': '?0',
-  'sec-ch-ua-platform': '"macOS"',
-  'sec-fetch-dest': 'document',
-  'sec-fetch-mode': 'navigate',
-  'sec-fetch-site': 'none',
-  'sec-fetch-user': '?1',
-  'upgrade-insecure-requests': '1',
-};
+const HEADER_POOL = [
+  { ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', chUa: '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"', platform: '"macOS"', mobile: '?0', lang: 'en-US,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', chUa: '"Chromium";v="145", "Not-A.Brand";v="24", "Google Chrome";v="145"', platform: '"Windows"', mobile: '?0', lang: 'en-US,en;q=0.8' },
+  { ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', chUa: '"Chromium";v="144", "Not-A.Brand";v="24", "Google Chrome";v="144"', platform: '"macOS"', mobile: '?0', lang: 'en-US,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', chUa: '"Chromium";v="146", "Not-A.Brand";v="24", "Microsoft Edge";v="146"', platform: '"Windows"', mobile: '?0', lang: 'en-US,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', chUa: '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"', platform: '"Linux"', mobile: '?0', lang: 'en-US,en;q=0.7' },
+  { ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', chUa: '"Chromium";v="143", "Not-A.Brand";v="24", "Google Chrome";v="143"', platform: '"macOS"', mobile: '?0', lang: 'en-US,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', chUa: '"Chromium";v="145", "Not-A.Brand";v="24", "Google Chrome";v="145"', platform: '"Windows"', mobile: '?0', lang: 'en-GB,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', chUa: '"Chromium";v="142", "Not-A.Brand";v="24", "Google Chrome";v="142"', platform: '"macOS"', mobile: '?0', lang: 'en-US,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', chUa: '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"', platform: '"Windows"', mobile: '?0', lang: 'en-US,en;q=0.9' },
+  { ua: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36', chUa: '"Chromium";v="144", "Not-A.Brand";v="24", "Google Chrome";v="144"', platform: '"Linux"', mobile: '?0', lang: 'en-US,en;q=0.8' },
+];
+
+let headerIndex = 0;
+function getNextHeaders() {
+  const h = HEADER_POOL[headerIndex % HEADER_POOL.length];
+  headerIndex++;
+  return {
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'accept-language': h.lang,
+    'user-agent': h.ua,
+    'sec-ch-ua': h.chUa,
+    'sec-ch-ua-mobile': h.mobile,
+    'sec-ch-ua-platform': h.platform,
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'none',
+    'sec-fetch-user': '?1',
+    'upgrade-insecure-requests': '1',
+  };
+}
 
 function scrapeDoUrl(targetUrl, opts = {}) {
   const p = new URLSearchParams({ token: scrapeDoApiKey, url: targetUrl, customHeaders: 'true' });
@@ -40,7 +58,7 @@ function scrapeDoUrl(targetUrl, opts = {}) {
 }
 
 async function scrapeDoFetch(targetUrl, opts = {}) {
-  return fetch(scrapeDoUrl(targetUrl, opts), { headers: BROWSER_HEADERS });
+  return fetch(scrapeDoUrl(targetUrl, opts), { headers: getNextHeaders() });
 }
 
 function decodeHtmlEntities(s) {
