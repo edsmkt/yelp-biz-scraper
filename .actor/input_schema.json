@@ -22,7 +22,7 @@
       "title": "Use super proxy",
       "type": "boolean",
       "description": "Enable scrape.do super proxy (residential). Slower but more reliable for blocked regions.",
-      "default": false
+      "default": true
     },
     "geoCode": {
       "title": "Geo code",

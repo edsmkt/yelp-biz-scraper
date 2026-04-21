@@ -5,7 +5,7 @@ await Actor.init();
 const {
   bizUrls = [],
   scrapeDoApiKey,
-  superProxy = false,
+  superProxy = true,
   geoCode = 'us',
   delayBetweenRequestsMs = 1500,
 } = await Actor.getInput();
