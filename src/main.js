@@ -5,7 +5,6 @@ await Actor.init();
 const {
   bizUrls = [],
   scrapeDoApiKey,
-  superProxy = false,
   geoCode = 'us',
   delayBetweenRequestsMs = 1500,
 } = await Actor.getInput();
@@ -259,8 +258,8 @@ for (let i = 0; i < bizUrls.length; i++) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    // First attempt uses configured proxy; on data-miss retries escalate to super
-    const useSuper = superProxy || attempt > 1;
+    // First attempt uses standard proxy; escalate to super on data-miss retries
+    const useSuper = attempt > 1;
     const attemptParams = new URLSearchParams(params);
     if (useSuper) attemptParams.set('super', 'true');
     else attemptParams.delete('super');
