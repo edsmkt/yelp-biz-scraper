@@ -250,7 +250,6 @@ for (let i = 0; i < bizUrls.length; i++) {
     url: bizUrl,
     render: 'true',
   });
-  if (superProxy) params.set('super', 'true');
   if (geoCode) params.set('geoCode', geoCode);
   const apiUrl = `http://api.scrape.do/?${params.toString()}`;
 
