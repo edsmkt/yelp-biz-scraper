@@ -57,9 +57,16 @@ function findBusinessKey(store) {
 
 function parseCoordinatesFromMap(mapSrc) {
   if (!mapSrc) return null;
-  const m = mapSrc.match(/center=(-?[\d.]+)%2C(-?[\d.]+)/);
-  if (!m) return null;
-  return { latitude: parseFloat(m[1]), longitude: parseFloat(m[2]) };
+  // Storefront businesses: center=LAT%2CLNG
+  let m = mapSrc.match(/center=(-?[\d.]+)%2C(-?[\d.]+)/);
+  if (m) return { latitude: parseFloat(m[1]), longitude: parseFloat(m[2]) };
+  // Service-area businesses: markers=...%7CLAT%2CLNG (last pair in markers param)
+  const markers = [...mapSrc.matchAll(/markers=[^&]*%7C(-?[\d.]+)%2C(-?[\d.]+)/g)];
+  if (markers.length) {
+    const last = markers[markers.length - 1];
+    return { latitude: parseFloat(last[1]), longitude: parseFloat(last[2]) };
+  }
+  return null;
 }
 
 function aliasFromUrl(url) {
