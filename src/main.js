@@ -5,7 +5,7 @@ await Actor.init();
 const {
   bizUrls = [],
   scrapeDoApiKey,
-  superProxy = true,
+  superProxy = false,
   geoCode = 'us',
   delayBetweenRequestsMs = 1500,
 } = await Actor.getInput();
@@ -259,8 +259,17 @@ for (let i = 0; i < bizUrls.length; i++) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    // First attempt uses configured proxy; on data-miss retries escalate to super
+    const useSuper = superProxy || attempt > 1;
+    const attemptParams = new URLSearchParams(params);
+    if (useSuper) attemptParams.set('super', 'true');
+    else attemptParams.delete('super');
+    const attemptUrl = `http://api.scrape.do/?${attemptParams.toString()}`;
+
+    if (attempt > 1) log.info(`  Retry ${attempt}/${MAX_RETRIES} with super proxy...`);
+
     try {
-      const res = await fetch(apiUrl);
+      const res = await fetch(attemptUrl);
       if (!res.ok) {
         lastError = `HTTP ${res.status}`;
         log.warning(`Attempt ${attempt}: HTTP ${res.status} for ${bizUrl}`);
