@@ -5,7 +5,7 @@ await Actor.init();
 const {
   bizUrls = [],
   scrapeDoApiKey,
-  geoCode = 'us',
+  geoCode = 'ca',
   delayBetweenRequestsMs = 1500,
 } = await Actor.getInput();
 
@@ -245,7 +245,7 @@ function parseBiz(apolloStore, url, rawHtml) {
 // -------- main loop ----------
 
 const MAX_RETRIES = 2; // attempt 1: standard proxy; attempt 2: super proxy on miss
-const RETRY_DELAY_MS = 3000;
+const RETRY_DELAY_MS = 12000;
 
 const results = [];
 for (let i = 0; i < bizUrls.length; i++) {
