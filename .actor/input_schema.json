@@ -4,12 +4,6 @@
   "schemaVersion": 1,
   "required": ["scrapeDoApiKey"],
   "properties": {
-    "bizIds": {
-      "title": "Yelp Business IDs",
-      "type": "array",
-      "description": "Yelp business encids from the search scraper (e.g. ENkevZxQUloCOSiwU3wEvA). Takes priority over bizUrls.",
-      "editor": "stringList"
-    },
     "bizUrls": {
       "title": "Yelp Business URLs",
       "type": "array",
