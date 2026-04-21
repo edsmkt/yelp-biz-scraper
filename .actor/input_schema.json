@@ -23,7 +23,7 @@
       "type": "string",
       "description": "Scrape.do geoCode (e.g. 'us'). Leave empty for default.",
       "editor": "textfield",
-      "default": "ca"
+      "default": "us"
     },
     "delayBetweenRequestsMs": {
       "title": "Delay between requests (ms)",

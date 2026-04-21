@@ -5,7 +5,7 @@ await Actor.init();
 const {
   bizUrls = [],
   scrapeDoApiKey,
-  geoCode = 'ca',
+  geoCode = 'us',
   delayBetweenRequestsMs = 1500,
 } = await Actor.getInput();
 
@@ -264,11 +264,14 @@ for (let i = 0; i < bizUrls.length; i++) {
   let lastError = null;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    // First attempt uses standard proxy; escalate to super on data-miss retries
+    // First attempt: standard proxy, configured geoCode
+    // Retry: super proxy + Canada geoCode (fresh residential pool)
     const useSuper = attempt > 1;
     const attemptParams = new URLSearchParams(params);
-    if (useSuper) attemptParams.set('super', 'true');
-    else attemptParams.delete('super');
+    if (useSuper) {
+      attemptParams.set('super', 'true');
+      attemptParams.set('geoCode', 'ca');
+    }
     const attemptUrl = `http://api.scrape.do/?${attemptParams.toString()}`;
 
     if (attempt > 1) log.info(`  Retry ${attempt}/${MAX_RETRIES} with super proxy...`);
