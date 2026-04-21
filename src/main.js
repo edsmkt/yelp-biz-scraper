@@ -255,7 +255,6 @@ for (let i = 0; i < bizUrls.length; i++) {
   const params = new URLSearchParams({
     token: scrapeDoApiKey,
     url: bizUrl,
-    render: 'true',
   });
   if (geoCode) params.set('geoCode', geoCode);
   const apiUrl = `http://api.scrape.do/?${params.toString()}`;
@@ -267,10 +266,7 @@ for (let i = 0; i < bizUrls.length; i++) {
     // All attempts use super proxy; retry drops render to avoid headless fingerprint detection
     const attemptParams = new URLSearchParams(params);
     attemptParams.set('super', 'true');
-    if (attempt > 1) {
-      attemptParams.delete('render');
-      attemptParams.set('geoCode', 'ca');
-    }
+    if (attempt > 1) attemptParams.set('geoCode', 'ca');
     const attemptUrl = `http://api.scrape.do/?${attemptParams.toString()}`;
 
     if (attempt > 1) log.info(`  Retry ${attempt}/${MAX_RETRIES} with super proxy...`);
